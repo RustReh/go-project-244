@@ -1,50 +1,48 @@
 package main
 
 import (
+    "context"
     "fmt"
-    "log"
     "os"
     "code"
-    "github.com/urfave/cli/v2"
+    cli "github.com/urfave/cli/v3"
 )
 
+
 func main() {
-    app := &cli.App{
-        Name:  "gendiff",
-        Usage: "Compares two configuration files and shows a difference.",
-        Commands: []*cli.Command{
-            {
-                Name:    "compare",
-                Aliases: []string{"cmp"},
-                Usage:   "Compare two files",
-                Flags: []cli.Flag{
-                    &cli.StringFlag{
-                        Name:    "format",
-                        Aliases: []string{"f"},
-                        Value:   "stylish",
-                        Usage:   "output format",
-                    },
-                },
-                Action: func(c *cli.Context) error {
-                    if c.NArg() != 2 {
-                        return cli.ShowSubcommandHelp(c)
-                    }
-                    path1 := c.Args().Get(0)
-                    path2 := c.Args().Get(1)
-                    format := c.String("format")
+	app := newApp()
+	if err := app.Run(context.Background(), os.Args); err != nil {
+		os.Exit(1)
+	}
+}
 
-                    result, err := code.GenDiff(path1, path2, format)
-                    if err != nil {
-                        return err
-                    }
-                    fmt.Println(result)
-                    return nil
-                },
-            },
-        },
-    }
+func newApp() *cli.Command {
+	return &cli.Command{
+		Name:      "gendiff",
+		Usage:     "Compares two configuration files and shows a difference.",
+		UsageText: "gendiff [--format stylish] <file1> <file2>",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "format",
+				Aliases: []string{"f"},
+				Usage:   "output format",
+				Value:   "stylish",
+			},
+		},
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			if cmd.Args().Len() != 2 {
+				return cli.Exit("usage: gendiff [--format stylish] <file1> <file2>", 2)
+			}
+			f1 := cmd.Args().First()
+			f2 := cmd.Args().Tail()[0]
+			format := cmd.String("format")
 
-    if err := app.Run(os.Args); err != nil {
-        log.Fatal(err)
-    }
+			out, err := code.GenDiff(f1, f2, format)
+			if err != nil {
+				return cli.Exit(err.Error(), 1)
+			}
+			fmt.Println(out)
+			return nil
+		},
+	}
 }
