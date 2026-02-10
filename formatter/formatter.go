@@ -74,8 +74,6 @@ func isMap(val any) bool {
 }
 
 
-
-
 func FormatStylish(nodes []*DiffNode, indent int) string {
 	var lines []string
 	prefix := strings.Repeat(" ", indent)
@@ -98,7 +96,16 @@ func FormatStylish(nodes []*DiffNode, indent int) string {
 		}
 	}
 
-	return strings.Join(lines, "\n")
+	result := strings.Join(lines, "\n")
+
+	if indent == 0 {
+		if len(lines) == 0 {
+			return "{}"
+		}
+		return "{\n" + result + "\n}"
+	}
+
+	return result
 }
 
 
