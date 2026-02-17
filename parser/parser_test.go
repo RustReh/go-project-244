@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const testHost = "hexlet.io"
+
 func createTempFile(t *testing.T, dir, name, content string) string {
 	t.Helper()
 	path := filepath.Join(dir, name)
@@ -26,12 +28,12 @@ func TestParseJSON(t *testing.T) {
 		{
 			name: "valid JSON",
 			input: `{
-				"host": "hexlet.io",
+				"host": "` + testHost + `",
 				"timeout": 50,
 				"debug": false
 			}`,
 			expected: map[string]any{
-				"host":    "hexlet.io",
+				"host":    testHost,
 				"timeout": 50.0,
 				"debug":   false,
 			},
@@ -39,7 +41,7 @@ func TestParseJSON(t *testing.T) {
 		},
 		{
 			name:        "invalid JSON syntax",
-			input:       `{ "host": "hexlet.io", }`,
+			input:       `{ "host": "` + testHost + `", }`,
 			expectError: true,
 		},
 		{
@@ -89,12 +91,12 @@ func TestParseYAML(t *testing.T) {
 	}{
 		{
 			name: "valid YAML",
-			input: `host: hexlet.io
+			input: `host: ` + testHost + `
 timeout: 50
 debug: false
 `,
 			expected: map[string]any{
-				"host":    "hexlet.io",
+				"host":    testHost,
 				"timeout": 50,
 				"debug":   false,
 			},
@@ -116,7 +118,7 @@ debug: false
 		},
 		{
 			name:        "invalid YAML syntax",
-			input:       "host: hexlet.io\n  timeout: 50",
+			input:       "host: " + testHost + "\n  timeout: 50",
 			expectError: true,
 		},
 		{
@@ -151,12 +153,12 @@ func TestParseTOML(t *testing.T) {
 	}{
 		{
 			name: "valid TOML",
-			input: `host = "hexlet.io"
+			input: `host = "` + testHost + `"
 timeout = 50
 debug = false
 `,
 			expected: map[string]any{
-				"host":    "hexlet.io",
+				"host":    testHost,
 				"timeout": int64(50),
 				"debug":   false,
 			},
@@ -178,7 +180,7 @@ setting2 = 200
 		},
 		{
 			name:        "invalid TOML syntax",
-			input:       `host = hexlet.io`,
+			input:       `host = ` + testHost,
 			expectError: true,
 		},
 		{
@@ -222,11 +224,11 @@ func TestParseFile(t *testing.T) {
 			name:     "JSON file with relative path",
 			filename: "config1.json",
 			content: `{
-				"host": "hexlet.io",
+				"host": "` + testHost + `",
 				"timeout": 50
 			}`,
 			expected: map[string]any{
-				"host":    "hexlet.io",
+				"host":    testHost,
 				"timeout": 50.0,
 			},
 			expectError: false,
@@ -234,11 +236,11 @@ func TestParseFile(t *testing.T) {
 		{
 			name:     "YAML file (.yaml extension)",
 			filename: "config2.yaml",
-			content: `host: hexlet.io
+			content: `host: ` + testHost + `
 timeout: 20
 `,
 			expected: map[string]any{
-				"host":    "hexlet.io",
+				"host":    testHost,
 				"timeout": 20,
 			},
 			expectError: false,
@@ -246,11 +248,11 @@ timeout: 20
 		{
 			name:     "YAML file (.yml extension)",
 			filename: "config3.yml",
-			content: `host: hexlet.io
+			content: `host: ` + testHost + `
 verbose: true
 `,
 			expected: map[string]any{
-				"host":    "hexlet.io",
+				"host":    testHost,
 				"verbose": true,
 			},
 			expectError: false,
@@ -258,11 +260,11 @@ verbose: true
 		{
 			name:     "TOML file",
 			filename: "config4.toml",
-			content: `host = "hexlet.io"
+			content: `host = "` + testHost + `"
 debug = false
 `,
 			expected: map[string]any{
-				"host":  "hexlet.io",
+				"host":  testHost,
 				"debug": false,
 			},
 			expectError: false,
@@ -382,4 +384,3 @@ func TestParseFile_PathNormalization(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, map[string]any{"key": "value"}, result)
 }
-

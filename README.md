@@ -2,6 +2,10 @@
 [![Actions Status](https://github.com/RustReh/go-project-244/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/RustReh/go-project-244/actions)
 
 
+[![Go CI](https://github.com/RustReh/go-project-244/actions/workflows/go.yml/badge.svg)](https://github.com/RustReh/go-project-244/actions)
+
+### SonarQube
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=RustReh_go-project-244&metric=coverage)](https://sonarcloud.io/summary/new_code?id=RustReh_go-project-244)
 
 Программа для вычисления отличий в файлах.
 

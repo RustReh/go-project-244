@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const testHost = "hexlet.io"
+
 func TestBuildDiff(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -16,19 +18,19 @@ func TestBuildDiff(t *testing.T) {
 	}{
 		{
 			name: "added key",
-			a:    map[string]any{"host": "hexlet.io"},
-			b:    map[string]any{"host": "hexlet.io", "timeout": 50},
+			a:    map[string]any{"host": testHost},
+			b:    map[string]any{"host": testHost, "timeout": 50},
 			expected: []*DiffNode{
-				{Type: "unchanged", Key: "host", Value: "hexlet.io"},
+				{Type: "unchanged", Key: "host", Value: testHost},
 				{Type: "added", Key: "timeout", Value: 50},
 			},
 		},
 		{
 			name: "removed key",
-			a:    map[string]any{"host": "hexlet.io", "timeout": 50},
-			b:    map[string]any{"host": "hexlet.io"},
+			a:    map[string]any{"host": testHost, "timeout": 50},
+			b:    map[string]any{"host": testHost},
 			expected: []*DiffNode{
-				{Type: "unchanged", Key: "host", Value: "hexlet.io"},
+				{Type: "unchanged", Key: "host", Value: testHost},
 				{Type: "removed", Key: "timeout", Value: 50},
 			},
 		},
@@ -68,7 +70,7 @@ func TestBuildDiff(t *testing.T) {
 		{
 			name: "complex nested structure",
 			a: map[string]any{
-				"host":    "hexlet.io",
+				"host":    testHost,
 				"timeout": 50,
 				"debug":   false,
 				"common": map[string]any{
@@ -77,7 +79,7 @@ func TestBuildDiff(t *testing.T) {
 				},
 			},
 			b: map[string]any{
-				"host":    "hexlet.io",
+				"host":    testHost,
 				"timeout": 20,
 				"verbose": true,
 				"common": map[string]any{
@@ -95,7 +97,7 @@ func TestBuildDiff(t *testing.T) {
 					},
 				},
 				{Type: "removed", Key: "debug", Value: false},
-				{Type: "unchanged", Key: "host", Value: "hexlet.io"},
+				{Type: "unchanged", Key: "host", Value: testHost},
 				{Type: "updated", Key: "timeout", OldVal: 50, NewVal: 20},
 				{Type: "added", Key: "verbose", Value: true},
 			},
@@ -234,7 +236,7 @@ func TestFormatStylish(t *testing.T) {
 				{Type: "added", Key: "timeout", Value: 50},
 			},
 			indent:   0,
-			expected: "  + timeout: 50",
+			expected: "{\n  + timeout: 50\n}",
 		},
 		{
 			name: "added and removed",
@@ -243,7 +245,7 @@ func TestFormatStylish(t *testing.T) {
 				{Type: "added", Key: "verbose", Value: true},
 			},
 			indent:   0,
-			expected: "  - debug: false\n  + verbose: true",
+			expected: "{\n  - debug: false\n  + verbose: true\n}",
 		},
 		{
 			name: "nested structure",
@@ -257,7 +259,7 @@ func TestFormatStylish(t *testing.T) {
 				},
 			},
 			indent:   0,
-			expected: "  common: {\n      + follow: true\n  }",
+			expected: "{\n  common: {\n      + follow: true\n  }\n}",
 		},
 		{
 			name: "with indent",
@@ -266,6 +268,12 @@ func TestFormatStylish(t *testing.T) {
 			},
 			indent:   4,
 			expected: "      + key: value",
+		},
+		{
+			name:     "empty diff",
+			nodes:    []*DiffNode{},
+			indent:   0,
+			expected: "{}",
 		},
 	}
 
@@ -396,13 +404,13 @@ func TestFormatValue(t *testing.T) {
 
 func TestIntegrationFullCycle(t *testing.T) {
 	data1 := map[string]any{
-		"host":    "hexlet.io",
+		"host":    testHost,
 		"timeout": 50,
 		"debug":   false,
 	}
 
 	data2 := map[string]any{
-		"host":    "hexlet.io",
+		"host":    testHost,
 		"timeout": 20,
 		"verbose": true,
 	}
@@ -412,7 +420,7 @@ func TestIntegrationFullCycle(t *testing.T) {
 
 	stylish := FormatStylish(diff, 0)
 	assert.Contains(t, stylish, "- debug: false")
-	assert.Contains(t, stylish, "host: hexlet.io")
+	assert.Contains(t, stylish, "host: "+testHost)
 	assert.Contains(t, stylish, "- timeout: 50")
 	assert.Contains(t, stylish, "+ timeout: 20")
 	assert.Contains(t, stylish, "+ verbose: true")
