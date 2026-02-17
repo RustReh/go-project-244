@@ -24,9 +24,6 @@ jobs:
     - name: Build
       run: make build
 
-    - name: Run
-      run: ./bin/gendiff
-
     - name: Test with Coverage
       run: go test -v -coverprofile=coverage.out ./...
 
