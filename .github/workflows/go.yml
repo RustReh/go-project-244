@@ -44,6 +44,6 @@ jobs:
           -Dsonar.organization=${{ env.SONAR_ORG }}
           -Dsonar.projectKey=${{ env.SONAR_PROJECT }}
           -Dsonar.sources=.
-          -Dsonar.go.coverage.reportPaths=${{ github.workspace }}/coverage.out
+          -Dsonar.go.coverage.reportPaths=coverage.out
           -Dsonar.exclusions=**/testdata/**,**/*.cast,**/bin/**
 
