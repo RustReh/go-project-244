@@ -33,7 +33,7 @@ jobs:
         golangci-lint run ./...
 
     - name: SonarCloud Scan
-      uses: SonarSource/sonarqube-scan-action@v6
+      uses: SonarSource/sonarqube-scan-action@8587231b95d78ac520a6e05c9f18cc3f87d8d32d
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
