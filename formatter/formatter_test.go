@@ -227,7 +227,6 @@ func TestFormatStylish(t *testing.T) {
 	tests := []struct {
 		name     string
 		nodes    []*DiffNode
-		indent   int
 		expected string
 	}{
 		{
@@ -235,8 +234,7 @@ func TestFormatStylish(t *testing.T) {
 			nodes: []*DiffNode{
 				{Type: "added", Key: "timeout", Value: 50},
 			},
-			indent:   0,
-			expected: "{\n  + timeout: 50\n}",
+			expected: "{\n    + timeout: 50\n}",
 		},
 		{
 			name: "added and removed",
@@ -244,8 +242,7 @@ func TestFormatStylish(t *testing.T) {
 				{Type: "removed", Key: "debug", Value: false},
 				{Type: "added", Key: "verbose", Value: true},
 			},
-			indent:   0,
-			expected: "{\n  - debug: false\n  + verbose: true\n}",
+			expected: "{\n    - debug: false\n    + verbose: true\n}",
 		},
 		{
 			name: "nested structure",
@@ -258,28 +255,18 @@ func TestFormatStylish(t *testing.T) {
 					},
 				},
 			},
-			indent:   0,
-			expected: "{\n  common: {\n      + follow: true\n  }\n}",
-		},
-		{
-			name: "with indent",
-			nodes: []*DiffNode{
-				{Type: "added", Key: "key", Value: "value"},
-			},
-			indent:   4,
-			expected: "      + key: value",
+			expected: "{\n    common: {\n        + follow: true\n    }\n}",
 		},
 		{
 			name:     "empty diff",
 			nodes:    []*DiffNode{},
-			indent:   0,
 			expected: "{}",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := FormatStylish(tt.nodes, tt.indent)
+			result := FormatStylish(tt.nodes, 0)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -353,50 +340,43 @@ func TestFormatValue(t *testing.T) {
 	tests := []struct {
 		name     string
 		value    any
-		indent   int
 		expected string
 	}{
 		{
 			name:     "string",
 			value:    "hello",
-			indent:   0,
 			expected: "hello",
 		},
 		{
 			name:     "number",
 			value:    42,
-			indent:   0,
 			expected: "42",
 		},
 		{
 			name:     "boolean",
 			value:    true,
-			indent:   0,
 			expected: "true",
 		},
 		{
 			name:     "empty map",
 			value:    map[string]any{},
-			indent:   0,
 			expected: "{}",
 		},
 		{
-			name:     "non-empty map",
-			value:    map[string]any{"key": "value"},
-			indent:   0,
-			expected: "{...}",
+			name:  "non-empty map",
+			value: map[string]any{"key": "value"},
+			expected: "{\n    key: value\n}",
 		},
 		{
 			name:     "nil",
 			value:    nil,
-			indent:   0,
 			expected: "<nil>",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := FormatValue(tt.value, tt.indent)
+			result := FormatValue(tt.value, 1)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -429,4 +409,37 @@ func TestIntegrationFullCycle(t *testing.T) {
 	assert.Contains(t, plain, "Property 'debug' was removed")
 	assert.Contains(t, plain, "Property 'timeout' was updated")
 	assert.Contains(t, plain, "Property 'verbose' was added")
+}
+
+func TestASTStructure(t *testing.T) {
+	a := map[string]any{
+		"common": map[string]any{
+			"setting1": "value1",
+			"setting2": 200,
+		},
+	}
+
+	b := map[string]any{
+		"common": map[string]any{
+			"setting1": "value1",
+			"setting2": 300,
+		},
+	}
+
+	diff := BuildDiff(a, b)
+
+	require.Len(t, diff, 1)
+
+	root := diff[0]
+	assert.Equal(t, "nested", root.Type)
+	assert.Equal(t, "common", root.Key)
+	require.Len(t, root.Children, 2)
+
+	child1 := root.Children[0]
+	child2 := root.Children[1]
+
+	assert.Equal(t, "unchanged", child1.Type)
+	assert.Equal(t, "updated", child2.Type)
+	assert.Equal(t, 200, child2.OldVal)
+	assert.Equal(t, 300, child2.NewVal)
 }
