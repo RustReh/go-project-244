@@ -311,11 +311,12 @@ func TestFormatPlain(t *testing.T) {
 					Key:  "common",
 					Children: []*DiffNode{
 						{Type: "added", Key: "follow", Value: true},
+						{Type: "added", Key: "setting5", Value: map[string]any{"key": "val"}},
 					},
 				},
 			},
 			path:     "",
-			expected: "Property 'common.follow' was added with value: true",
+			expected: "Property 'common.follow' was added with value: true\nProperty 'common.setting5' was added with value: [complex value]",
 		},
 		{
 			name: "multiple changes",

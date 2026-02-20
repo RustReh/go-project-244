@@ -15,28 +15,16 @@ func FormatPlain(nodes []*DiffNode, path string) string {
 		}
 
 		switch node.Type {
-
 		case "added":
-			lines = append(lines,
-				fmt.Sprintf("Property '%s' was added with value: %v",
-					currentPath,
-					node.Value,
-				),
-			)
+			lines = append(lines, fmt.Sprintf("Property '%s' was added with value: %s",
+				currentPath, formatPlainValue(node.Value)))
 
 		case "removed":
-			lines = append(lines,
-				fmt.Sprintf("Property '%s' was removed", currentPath),
-			)
+			lines = append(lines, fmt.Sprintf("Property '%s' was removed", currentPath))
 
 		case "updated":
-			lines = append(lines,
-				fmt.Sprintf("Property '%s' was updated. From %v to %v",
-					currentPath,
-					node.OldVal,
-					node.NewVal,
-				),
-			)
+			lines = append(lines, fmt.Sprintf("Property '%s' was updated. From %s to %s",
+				currentPath, formatPlainValue(node.OldVal), formatPlainValue(node.NewVal)))
 
 		case "nested":
 			nested := FormatPlain(node.Children, currentPath)
@@ -47,4 +35,21 @@ func FormatPlain(nodes []*DiffNode, path string) string {
 	}
 
 	return strings.Join(lines, "\n")
+}
+
+func formatPlainValue(value any) string {
+	switch v := value.(type) {
+	case map[string]any:
+		return "[complex value]"
+	case []any:
+		return "[complex value]"
+	case string:
+		return fmt.Sprintf("'%s'", v)
+	case bool:
+		return fmt.Sprintf("%t", v)
+	case nil:
+		return "null"
+	default:
+		return fmt.Sprintf("%v", v)
+	}
 }
