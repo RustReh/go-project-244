@@ -235,7 +235,7 @@ func TestFormatStylish(t *testing.T) {
 			nodes: []*DiffNode{
 				{Type: "added", Key: "timeout", Value: 50},
 			},
-			expected: "{\n    + timeout: 50\n}",
+			expected: "{\n  + timeout: 50\n}",
 		},
 		{
 			name: "added and removed",
@@ -243,7 +243,7 @@ func TestFormatStylish(t *testing.T) {
 				{Type: "removed", Key: "debug", Value: false},
 				{Type: "added", Key: "verbose", Value: true},
 			},
-			expected: "{\n    - debug: false\n    + verbose: true\n}",
+			expected: "{\n  - debug: false\n  + verbose: true\n}",
 		},
 		{
 			name:     "empty diff",

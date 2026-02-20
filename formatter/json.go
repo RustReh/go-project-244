@@ -5,16 +5,16 @@ import (
 )
 
 type jsonNode struct {
-	Status   string     `json:"status"`
-	Value    any        `json:"value,omitempty"`
-	OldValue any        `json:"oldValue,omitempty"`
-	NewValue any        `json:"newValue,omitempty"`
-	Children *jsonNode  `json:"children,omitempty"`
+	Status   string      `json:"status"`
+	Value    any         `json:"value,omitempty"`
+	OldValue any         `json:"oldValue,omitempty"`
+	NewValue any         `json:"newValue,omitempty"`
+	Children interface{} `json:"children,omitempty"`
 }
 
 func FormatJSON(nodes []*DiffNode) (string, error) {
 	jsonData := convertToJSONNode(nodes)
-	bytes, err := json.MarshalIndent(jsonData, "", "  ")
+	bytes, err := json.MarshalIndent(jsonData, "", "    ")
 	if err != nil {
 		return "", err
 	}
@@ -43,7 +43,7 @@ func convertToJSONNode(nodes []*DiffNode) map[string]*jsonNode {
 			jsonN.Status = "nested"
 			childrenMap := convertToJSONNode(node.Children)
 			if len(childrenMap) > 0 {
-				jsonN.Children = &jsonNode{}
+				jsonN.Children = childrenMap
 			}
 		}
 		result[node.Key] = jsonN

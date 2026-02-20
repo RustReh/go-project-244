@@ -6,54 +6,77 @@ import (
 	"strings"
 )
 
+const indentSize = 4
+
 func FormatStylish(nodes []*DiffNode, depth int) string {
 	if len(nodes) == 0 {
 		return "{}"
 	}
 
-	indent := getKeyIndent(depth)
 	lines := []string{"{"}
 
 	for _, node := range nodes {
-		lines = append(lines, formatNode(node, depth+1))
+		lines = append(lines, formatNode(node, depth))
 	}
 
-	lines = append(lines, fmt.Sprintf("%s}", indent))
+	// Closing brace indent: depth * indentSize (0 spaces for root level)
+	closingIndent := ""
+	if depth > 0 {
+		closingIndent = strings.Repeat(" ", depth*indentSize)
+	}
+	lines = append(lines, fmt.Sprintf("%s}", closingIndent))
 	return strings.Join(lines, "\n")
 }
 
 func formatNode(node *DiffNode, depth int) string {
-	keyIndent := getKeyIndent(depth)
-	contentIndent := getContentIndent(depth)
+	// Base indent for properties at this depth: (depth + 1) * indentSize
+	baseIndent := (depth + 1) * indentSize
 
 	switch node.Type {
 	case "added":
-		return fmt.Sprintf("%s+ %s: %s", contentIndent, node.Key, FormatValue(node.Value, depth))
+		markerIndent := strings.Repeat(" ", baseIndent-2)
+		return fmt.Sprintf("%s+ %s: %s",
+			markerIndent,
+			node.Key,
+			FormatValue(node.Value, depth+1),
+		)
 	case "removed":
-		return fmt.Sprintf("%s- %s: %s", contentIndent, node.Key, FormatValue(node.Value, depth))
+		markerIndent := strings.Repeat(" ", baseIndent-2)
+		return fmt.Sprintf("%s- %s: %s",
+			markerIndent,
+			node.Key,
+			FormatValue(node.Value, depth+1),
+		)
 	case "unchanged":
-		return fmt.Sprintf("%s  %s: %s", contentIndent, node.Key, FormatValue(node.Value, depth))
+		propIndent := strings.Repeat(" ", baseIndent)
+		return fmt.Sprintf("%s%s: %s",
+			propIndent,
+			node.Key,
+			FormatValue(node.Value, depth+1),
+		)
 	case "updated":
-		line1 := fmt.Sprintf("%s- %s: %s", contentIndent, node.Key, FormatValue(node.OldVal, depth))
-		line2 := fmt.Sprintf("%s+ %s: %s", contentIndent, node.Key, FormatValue(node.NewVal, depth))
+		markerIndent := strings.Repeat(" ", baseIndent-2)
+		line1 := fmt.Sprintf("%s- %s: %s",
+			markerIndent,
+			node.Key,
+			FormatValue(node.OldVal, depth+1),
+		)
+		line2 := fmt.Sprintf("%s+ %s: %s",
+			markerIndent,
+			node.Key,
+			FormatValue(node.NewVal, depth+1),
+		)
 		return line1 + "\n" + line2
 	case "nested":
-		lines := []string{fmt.Sprintf("%s  %s: {", keyIndent, node.Key)}
-		for _, child := range node.Children {
-			lines = append(lines, formatNode(child, depth+1))
-		}
-		lines = append(lines, fmt.Sprintf("%s  }", keyIndent))
-		return strings.Join(lines, "\n")
+		propIndent := strings.Repeat(" ", baseIndent)
+		return fmt.Sprintf("%s%s: %s",
+			propIndent,
+			node.Key,
+			FormatStylish(node.Children, depth+1),
+		)
 	}
+
 	return ""
-}
-
-func getKeyIndent(depth int) string {
-	return strings.Repeat(" ", depth*4)
-}
-
-func getContentIndent(depth int) string {
-	return strings.Repeat(" ", depth*4+2)
 }
 
 func FormatValue(value any, depth int) string {
@@ -62,7 +85,7 @@ func FormatValue(value any, depth int) string {
 		if len(v) == 0 {
 			return "{}"
 		}
-		return formatMapValue(v, depth)
+		return formatMap(v, depth)
 	case string:
 		return v
 	case bool:
@@ -74,22 +97,27 @@ func FormatValue(value any, depth int) string {
 	}
 }
 
-func formatMapValue(m map[string]any, depth int) string {
+func formatMap(m map[string]any, depth int) string {
+	// Properties inside the map should be at (depth + 2) * indentSize
+	propIndent := strings.Repeat(" ", (depth+2)*indentSize)
+	// Closing brace for the map should be at (depth + 1) * indentSize
+	closingIndent := strings.Repeat(" ", (depth+1)*indentSize)
+
 	keys := make([]string, 0, len(m))
 	for k := range m {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
-	keyIndent := getKeyIndent(depth)
-	contentIndent := getContentIndent(depth)
-
 	lines := []string{"{"}
+
 	for _, k := range keys {
-		valStr := FormatValue(m[k], depth+1)
-		lines = append(lines, fmt.Sprintf("%s    %s: %s", contentIndent, k, valStr))
+		val := FormatValue(m[k], depth+1)
+		lines = append(lines,
+			fmt.Sprintf("%s%s: %s", propIndent, k, val),
+		)
 	}
-	lines = append(lines, fmt.Sprintf("%s  }", keyIndent))
+
+	lines = append(lines, fmt.Sprintf("%s}", closingIndent))
 	return strings.Join(lines, "\n")
 }
-
