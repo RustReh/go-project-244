@@ -6,65 +6,52 @@ import (
 	"strings"
 )
 
-const indentSize = 4
-
 func FormatStylish(nodes []*DiffNode, depth int) string {
 	if len(nodes) == 0 {
 		return "{}"
 	}
-	contentIndent := strings.Repeat(" ", (depth+1)*indentSize)
-	bracketIndent := strings.Repeat(" ", depth*indentSize)
 
+	indent := getIndent(depth)
 	lines := []string{"{"}
 
 	for _, node := range nodes {
-		switch node.Type {
-		case "added":
-			lines = append(lines, fmt.Sprintf("%s+ %s: %s", contentIndent, node.Key, FormatValue(node.Value, depth+1)))
-		case "removed":
-			lines = append(lines, fmt.Sprintf("%s- %s: %s", contentIndent, node.Key, FormatValue(node.Value, depth+1)))
-		case "unchanged":
-			lines = append(lines, fmt.Sprintf("%s  %s: %s", contentIndent, node.Key, FormatValue(node.Value, depth+1)))
-		case "updated":
-			lines = append(lines, fmt.Sprintf("%s- %s: %s", contentIndent, node.Key, FormatValue(node.OldVal, depth+1)))
-			lines = append(lines, fmt.Sprintf("%s+ %s: %s", contentIndent, node.Key, FormatValue(node.NewVal, depth+1)))
-		case "nested":
-			lines = append(lines, fmt.Sprintf("%s%s: {", contentIndent, node.Key))
-			lines = append(lines, renderNodesRaw(node.Children, depth+1))
-			lines = append(lines, fmt.Sprintf("%s}", contentIndent))
-		}
+		lines = append(lines, formatNode(node, depth+1))
 	}
 
-	lines = append(lines, fmt.Sprintf("%s}", bracketIndent))
+	lines = append(lines, fmt.Sprintf("%s}", indent))
 	return strings.Join(lines, "\n")
 }
 
-func renderNodesRaw(nodes []*DiffNode, depth int) string {
-	if len(nodes) == 0 {
+func formatNode(node *DiffNode, depth int) string {
+	indent := getIndent(depth)
+
+	switch node.Type {
+	case "added":
+		return fmt.Sprintf("%s+ %s: %s", indent, node.Key, FormatValue(node.Value, depth))
+	case "removed":
+		return fmt.Sprintf("%s- %s: %s", indent, node.Key, FormatValue(node.Value, depth))
+	case "unchanged":
+		return fmt.Sprintf("%s  %s: %s", indent, node.Key, FormatValue(node.Value, depth))
+	case "updated":
+		line1 := fmt.Sprintf("%s- %s: %s", indent, node.Key, FormatValue(node.OldVal, depth))
+		line2 := fmt.Sprintf("%s+ %s: %s", indent, node.Key, FormatValue(node.NewVal, depth))
+		return line1 + "\n" + line2
+	case "nested":
+		lines := []string{fmt.Sprintf("%s  %s: {", indent, node.Key)}
+		for _, child := range node.Children {
+			lines = append(lines, formatNode(child, depth+1))
+		}
+		lines = append(lines, fmt.Sprintf("%s  }", indent))
+		return strings.Join(lines, "\n")
+	}
+	return ""
+}
+
+func getIndent(depth int) string {
+	if depth == 0 {
 		return ""
 	}
-
-	contentIndent := strings.Repeat(" ", (depth+1)*indentSize)
-	var lines []string
-
-	for _, node := range nodes {
-		switch node.Type {
-		case "added":
-			lines = append(lines, fmt.Sprintf("%s+ %s: %s", contentIndent, node.Key, FormatValue(node.Value, depth+1)))
-		case "removed":
-			lines = append(lines, fmt.Sprintf("%s- %s: %s", contentIndent, node.Key, FormatValue(node.Value, depth+1)))
-		case "unchanged":
-			lines = append(lines, fmt.Sprintf("%s  %s: %s", contentIndent, node.Key, FormatValue(node.Value, depth+1)))
-		case "updated":
-			lines = append(lines, fmt.Sprintf("%s- %s: %s", contentIndent, node.Key, FormatValue(node.OldVal, depth+1)))
-			lines = append(lines, fmt.Sprintf("%s+ %s: %s", contentIndent, node.Key, FormatValue(node.NewVal, depth+1)))
-		case "nested":
-			lines = append(lines, fmt.Sprintf("%s%s: {", contentIndent, node.Key))
-			lines = append(lines, renderNodesRaw(node.Children, depth+1))
-			lines = append(lines, fmt.Sprintf("%s}", contentIndent))
-		}
-	}
-	return strings.Join(lines, "\n")
+	return strings.Repeat(" ", 4+(depth-1)*2)
 }
 
 func FormatValue(value any, depth int) string {
@@ -73,31 +60,33 @@ func FormatValue(value any, depth int) string {
 		if len(v) == 0 {
 			return "{}"
 		}
-
-		keys := make([]string, 0, len(v))
-		for k := range v {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-
-		keyIndent := strings.Repeat(" ", depth*indentSize)
-		bracketIndent := strings.Repeat(" ", (depth-1)*indentSize)
-
-		lines := []string{"{"}
-		for _, k := range keys {
-			valStr := FormatValue(v[k], depth+1)
-			lines = append(lines, fmt.Sprintf("%s%s: %s", keyIndent, k, valStr))
-		}
-		lines = append(lines, fmt.Sprintf("%s}", bracketIndent))
-		return strings.Join(lines, "\n")
-
+		return formatMapValue(v, depth)
 	case string:
 		return v
 	case bool:
 		return fmt.Sprintf("%t", v)
 	case nil:
-		return "<nil>"
+		return "null"
 	default:
 		return fmt.Sprintf("%v", v)
 	}
+}
+
+func formatMapValue(m map[string]any, depth int) string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	indent := getIndent(depth)
+	innerIndent := getIndent(depth + 1)
+
+	lines := []string{"{"}
+	for _, k := range keys {
+		valStr := FormatValue(m[k], depth+1)
+		lines = append(lines, fmt.Sprintf("%s    %s: %s", innerIndent, k, valStr))
+	}
+	lines = append(lines, fmt.Sprintf("%s  }", indent))
+	return strings.Join(lines, "\n")
 }

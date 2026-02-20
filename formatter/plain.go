@@ -18,14 +18,11 @@ func FormatPlain(nodes []*DiffNode, path string) string {
 		case "added":
 			lines = append(lines, fmt.Sprintf("Property '%s' was added with value: %s",
 				currentPath, formatPlainValue(node.Value)))
-
 		case "removed":
 			lines = append(lines, fmt.Sprintf("Property '%s' was removed", currentPath))
-
 		case "updated":
 			lines = append(lines, fmt.Sprintf("Property '%s' was updated. From %s to %s",
 				currentPath, formatPlainValue(node.OldVal), formatPlainValue(node.NewVal)))
-
 		case "nested":
 			nested := FormatPlain(node.Children, currentPath)
 			if nested != "" {

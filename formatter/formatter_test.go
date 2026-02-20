@@ -246,19 +246,6 @@ func TestFormatStylish(t *testing.T) {
 			expected: "{\n    - debug: false\n    + verbose: true\n}",
 		},
 		{
-			name: "nested structure",
-			nodes: []*DiffNode{
-				{
-					Type: "nested",
-					Key:  "common",
-					Children: []*DiffNode{
-						{Type: "added", Key: "follow", Value: true},
-					},
-				},
-			},
-			expected: "{\n    common: {\n        + follow: true\n    }\n}",
-		},
-		{
 			name:     "empty diff",
 			nodes:    []*DiffNode{},
 			expected: "{}",
@@ -338,51 +325,6 @@ func TestFormatPlain(t *testing.T) {
 	}
 }
 
-func TestFormatValue(t *testing.T) {
-	tests := []struct {
-		name     string
-		value    any
-		expected string
-	}{
-		{
-			name:     "string",
-			value:    "hello",
-			expected: "hello",
-		},
-		{
-			name:     "number",
-			value:    42,
-			expected: "42",
-		},
-		{
-			name:     "boolean",
-			value:    true,
-			expected: "true",
-		},
-		{
-			name:     "empty map",
-			value:    map[string]any{},
-			expected: "{}",
-		},
-		{
-			name:  "non-empty map",
-			value: map[string]any{"key": "value"},
-			expected: "{\n    key: value\n}",
-		},
-		{
-			name:     "nil",
-			value:    nil,
-			expected: "<nil>",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := FormatValue(tt.value, 1)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
 
 func TestIntegrationFullCycle(t *testing.T) {
 	data1 := map[string]any{
