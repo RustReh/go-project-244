@@ -61,7 +61,7 @@ func FormatValue(value any, depth int) string {
     case bool:
         return fmt.Sprintf("%t", v)
     case nil:
-        return ""
+        return "null"
     default:
         return fmt.Sprintf("%v", v)
     }
