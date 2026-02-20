@@ -22,7 +22,7 @@ make build
 ## Запуск
 
 ```bash
-make run
+make run ARGS="testdata/fixture/file1.json testdata/fixture/file2.json"
 ```
 
 ## Тестирование
