@@ -5,7 +5,6 @@ import (
 )
 
 type jsonNode struct {
-    Key      string `json:"key"`
     Status   string `json:"status"`
     Value    any    `json:"value,omitempty"`
     OldValue any    `json:"oldValue,omitempty"`
@@ -14,43 +13,40 @@ type jsonNode struct {
 }
 
 func FormatJSON(nodes []*DiffNode) (string, error) {
-    j := convertToJSONNodes(nodes)
-    payload := map[string]any{
-        "diff": j,
-    }
-
-    bytes, err := json.MarshalIndent(payload, "", "    ")
+    jsonData := convertToJSONNode(nodes)
+    bytes, err := json.MarshalIndent(jsonData, "", "    ")
     if err != nil {
         return "", err
     }
     return string(bytes), nil
 }
 
-func convertToJSONNodes(nodes []*DiffNode) []*jsonNode {
-    result := make([]*jsonNode, 0, len(nodes))
+func convertToJSONNode(nodes []*DiffNode) map[string]*jsonNode {
+    result := make(map[string]*jsonNode)
     for _, node := range nodes {
-        jsonN := &jsonNode{
-            Key:    node.Key,
-            Status: node.Type,
-        }
-
+        jsonN := &jsonNode{}
         switch node.Type {
         case "added":
-            jsonN.NewValue = convertValue(node.Value)
+            jsonN.Status = "added"
+            jsonN.Value = convertValue(node.Value)
         case "removed":
-            jsonN.OldValue = convertValue(node.Value)
+            jsonN.Status = "removed"
+            jsonN.Value = convertValue(node.Value)
         case "unchanged":
-            jsonN.OldValue = convertValue(node.Value)
+            jsonN.Status = "unchanged"
+            jsonN.Value = convertValue(node.Value)
         case "updated":
+            jsonN.Status = "updated"
             jsonN.OldValue = convertValue(node.OldVal)
             jsonN.NewValue = convertValue(node.NewVal)
         case "nested":
-            childrenSlice := convertToJSONNodes(node.Children)
-            if len(childrenSlice) > 0 {
-                jsonN.Children = childrenSlice
+            jsonN.Status = "nested"
+            childrenMap := convertToJSONNode(node.Children)
+            if len(childrenMap) > 0 {
+                jsonN.Children = childrenMap
             }
         }
-        result = append(result, jsonN)
+        result[node.Key] = jsonN
     }
     return result
 }
