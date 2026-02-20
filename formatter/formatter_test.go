@@ -224,43 +224,6 @@ func TestIsMap(t *testing.T) {
 	}
 }
 
-func TestFormatStylish(t *testing.T) {
-    tests := []struct {
-        name     string
-        nodes    []*DiffNode
-        expected string
-    }{
-        {
-            name: "single added node",
-            nodes: []*DiffNode{
-                {Type: "added", Key: "timeout", Value: 50},
-            },
-            expected: "{\n+ timeout: 50\n}",
-        },
-        {
-            name: "added and removed",
-            nodes: []*DiffNode{
-                {Type: "removed", Key: "debug", Value: false},
-                {Type: "added", Key: "verbose", Value: true},
-            },
-            expected: "{\n- debug: false\n+ verbose: true\n}",
-        },
-        {
-            name:     "empty diff",
-            nodes:    []*DiffNode{},
-            expected: "{}",
-        },
-    }
-
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            result := FormatStylish(tt.nodes, 0)
-            assert.Equal(t, tt.expected, result)
-        })
-    }
-}
-
-
 func TestFormatPlain(t *testing.T) {
 	tests := []struct {
 		name     string

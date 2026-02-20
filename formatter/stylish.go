@@ -6,7 +6,7 @@ import (
     "strings"
 )
 
-const indentSize = 2
+const indentSize = 4
 
 func FormatStylish(nodes []*DiffNode, depth int) string {
     if len(nodes) == 0 {
@@ -14,7 +14,14 @@ func FormatStylish(nodes []*DiffNode, depth int) string {
     }
 
     lines := []string{"{"}
-    for _, node := range nodes {
+
+    sortedNodes := make([]*DiffNode, len(nodes))
+    copy(sortedNodes, nodes)
+    sort.Slice(sortedNodes, func(i, j int) bool {
+        return sortedNodes[i].Key < sortedNodes[j].Key
+    })
+
+    for _, node := range sortedNodes {
         lines = append(lines, formatNode(node, depth))
     }
 
@@ -50,7 +57,7 @@ func FormatValue(value any, depth int) string {
     case map[string]any:
         return formatMap(v, depth)
     case string:
-        return v  // Без кавычек для stylish!
+        return v
     case bool:
         return fmt.Sprintf("%t", v)
     case nil:
@@ -75,11 +82,11 @@ func formatMap(m map[string]any, depth int) string {
     propIndent := strings.Repeat(" ", (depth+1)*indentSize)
 
     for _, k := range keys {
-        lines = append(lines, fmt.Sprintf("%s%s: %s", propIndent, k, FormatValue(m[k], depth+1)))
+        valStr := FormatValue(m[k], depth+1)
+        lines = append(lines, fmt.Sprintf("%s%s: %s", propIndent, k, valStr))
     }
 
     closingIndent := strings.Repeat(" ", depth*indentSize)
     lines = append(lines, fmt.Sprintf("%s}", closingIndent))
-
     return strings.Join(lines, "\n")
 }
