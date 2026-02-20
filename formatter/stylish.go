@@ -6,7 +6,7 @@ import (
     "strings"
 )
 
-const indentSize = 2 
+const indentSize = 2
 
 func FormatStylish(nodes []*DiffNode, depth int) string {
     if len(nodes) == 0 {
@@ -25,7 +25,7 @@ func FormatStylish(nodes []*DiffNode, depth int) string {
 
 func formatNode(node *DiffNode, depth int) string {
     propIndent := strings.Repeat(" ", (depth+1)*indentSize)
-    markerIndent := strings.Repeat(" ", (depth+1)*indentSize-2) // -2 для +/-
+    markerIndent := strings.Repeat(" ", (depth+1)*indentSize-2)
 
     switch node.Type {
     case "added":
