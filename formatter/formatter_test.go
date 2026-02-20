@@ -1,6 +1,7 @@
 package formatter
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -443,4 +444,44 @@ func TestASTStructure(t *testing.T) {
 	assert.Equal(t, "updated", child2.Type)
 	assert.Equal(t, 200, child2.OldVal)
 	assert.Equal(t, 300, child2.NewVal)
+}
+
+func TestFormatJSON(t *testing.T) {
+	tests := []struct {
+		name     string
+		nodes    []*DiffNode
+		expected string
+	}{
+		{
+			name: "simple added",
+			nodes: []*DiffNode{
+				{Type: "added", Key: "timeout", Value: 50},
+			},
+		},
+		{
+			name: "nested structure",
+			nodes: []*DiffNode{
+				{
+					Type: "nested",
+					Key:  "common",
+					Children: []*DiffNode{
+						{Type: "added", Key: "follow", Value: true},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := FormatJSON(tt.nodes)
+			require.NoError(t, err)
+
+			var decoded any
+			err = json.Unmarshal([]byte(result), &decoded)
+			require.NoError(t, err, "Результат должен быть валидным JSON")
+
+			assert.NotEmpty(t, result)
+		})
+	}
 }
